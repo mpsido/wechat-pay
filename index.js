@@ -19,51 +19,62 @@ const config = {
   // spbill_create_ip: 'IP地址'
 };
 
-const api = new tenpay(config);
+tenpay.sandbox(config, true).then(api => {
+    console.log('Wechat ready');
+    app.post('/get-qr', async (req, res) => {
+        try {
+            // const sandboxAPI = await tenpay.sandbox(config, true);
+            const txId = req.body.txId;
+            let {prepay_id, code_url} = await api.unifiedOrder({
+                out_trade_no: txId, // 商户单号 that will appear in the bill
+                body: 'bullshit', //商品 that will appear in the bill
+                total_fee: 101, //amount to pay in cents
+                // openid: '用户openid',
+                trade_type: 'NATIVE',
+                product_id: 'awesomeProduct'
+            });
+            console.log('prepay_id', prepay_id);
+            console.log('code_url', code_url);
+            res.send({
+                code_url,
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(404).send({ message: err.toString('utf-8') });
+        }
+    });
 
-app.post('/get-qr', async (req, res) => {
-    try {
-        const txId = req.body.txId;
-        let {prepay_id, code_url} = await api.unifiedOrder({
-            out_trade_no: txId, // 商户单号 that will appear in the bill
-            body: 'bullshit', //商品 that will appear in the bill
-            total_fee: 1, //amount to pay in cents
-            // openid: '用户openid',
-            trade_type: 'NATIVE',
+    app.get('/native-url', async (req, res) => {
+        const result = await api.getNativeUrl({
             product_id: 'awesomeProduct'
         });
-        console.log('prepay_id', prepay_id);
-        console.log('code_url', code_url);
-        res.send({
-            code_url,
+        console.log('result', result);
+        res.send(result);
+    });
+
+    app.post('/tenpay', api.middlewareForExpress('pay'), (req, res) => {
+        console.log('calling tenpay', req, req.body);
+        tenpay.sandbox(config).then(sandboxAPI => {
+            console.log('sandboxAPI', sandboxAPI);
+            let info = req.weixin;
+          // 业务逻辑...
+          // 回复消息(参数为空回复成功, 传值则为错误消息)
+            res.send('错误消息' || '');
         });
-    } catch (err) {
-        console.error(err);
-        res.status(404).send({ message: err.toString('utf-8') });
-    }
+     
+    });
+
+    app.post('/native-tenpay', api.middlewareForExpress('nativePay'), (req, res) => {
+        console.log('calling native pay', req, req.body);
+        let info = req.weixin;
+        console.log('info', info);
+        // 业务逻辑和统一下单获取prepay_id...
+
+        // 响应成功或失败(第二个可选参数为输出错误信息)
+        res.replyNative(prepay_id, err_msg);
+    });
 })
 
-app.post('/tenpay', api.middlewareForExpress('pay'), (req, res) => {
-    console.log('calling tenpay', req, req.body);
-    tenpay.sandbox(config).then(sandboxAPI => {
-        console.log('sandboxAPI', sandboxAPI);
-        let info = req.weixin;
-      // 业务逻辑...
-      // 回复消息(参数为空回复成功, 传值则为错误消息)
-        res.send('错误消息' || '');
-    });
- 
-});
-
-app.post('/native-tenpay', api.middlewareForExpress('nativePay'), (req, res) => {
-    console.log('calling native pay', req, req.body);
-    let info = req.weixin;
-    console.log('info', info);
-    // 业务逻辑和统一下单获取prepay_id...
-
-    // 响应成功或失败(第二个可选参数为输出错误信息)
-    res.replyNative(prepay_id, err_msg);
-});
 
 const server = app.listen(3001, function () {
    const host = server.address().address
