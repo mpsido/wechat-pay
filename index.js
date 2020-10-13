@@ -5,6 +5,7 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.text({type: '*/xml'}));
+app.use(bodyParser.json());
 app.get('/', function (req, res) {
    res.send('Hello World');
 })
@@ -19,6 +20,28 @@ const config = {
 };
 
 const api = new tenpay(config);
+
+app.post('/get-qr', async (req, res) => {
+    try {
+        const txId = req.body.txId;
+        let {prepay_id, code_url} = await api.unifiedOrder({
+            out_trade_no: txId,
+            body: 'bullshit',
+            total_fee: '0',
+            // openid: '用户openid',
+            trade_type: 'NATIVE',
+            product_id: 'awesomeProduct'
+        });
+        console.log('prepay_id', prepay_id);
+        console.log('code_url', code_url);
+        res.send({
+            code_url,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(404).send({ message: err.toString('utf-8') });
+    }
+})
 
 app.post('/tenpay', (req, res) => {
     console.log('calling tenpay');
