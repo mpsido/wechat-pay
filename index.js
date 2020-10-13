@@ -1,6 +1,7 @@
 const express = require('express');
 const tenpay = require('tenpay');
 const app = express();
+require('dotenv').config();
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.text({type: '*/xml'}));
@@ -9,8 +10,8 @@ app.get('/', function (req, res) {
 })
 
 const config = {
-  appid: 'wx440c2467b90817aa',
-  mchid: '1500059462',
+  appid: process.env.appid,
+  mchid: process.env.mchid,
   partnerKey: 'uMQKLbXzRqss0xPRtPLNdaskldoi2ehu',
   // pfx: require('fs').readFileSync('证书文件路径'),
   // notify_url: '支付回调网址',
