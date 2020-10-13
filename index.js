@@ -15,7 +15,7 @@ const config = {
   mchid: process.env.mchid,
   partnerKey: 'uMQKLbXzRqss0xPRtPLNdaskldoi2ehu',
   // pfx: require('fs').readFileSync('证书文件路径'),
-  notify_url: 'localhost:3001/tenpay',
+  notify_url: 'localhost:3001/native-tenpay',
   // spbill_create_ip: 'IP地址'
 };
 
@@ -27,7 +27,7 @@ app.post('/get-qr', async (req, res) => {
         let {prepay_id, code_url} = await api.unifiedOrder({
             out_trade_no: txId, // 商户单号 that will appear in the bill
             body: 'bullshit', //商品 that will appear in the bill
-            total_fee: 10, //amount to pay in cents
+            total_fee: 1, //amount to pay in cents
             // openid: '用户openid',
             trade_type: 'NATIVE',
             product_id: 'awesomeProduct'
@@ -44,7 +44,7 @@ app.post('/get-qr', async (req, res) => {
 })
 
 app.post('/tenpay', api.middlewareForExpress('pay'), (req, res) => {
-    console.log('calling tenpay');
+    console.log('calling tenpay', req, req.body);
     tenpay.sandbox(config).then(sandboxAPI => {
         console.log('sandboxAPI', sandboxAPI);
         let info = req.weixin;
@@ -53,6 +53,16 @@ app.post('/tenpay', api.middlewareForExpress('pay'), (req, res) => {
         res.send('错误消息' || '');
     });
  
+});
+
+app.post('/native-tenpay', api.middlewareForExpress('nativePay'), (req, res) => {
+    console.log('calling native pay', req, req.body);
+    let info = req.weixin;
+    console.log('info', info);
+    // 业务逻辑和统一下单获取prepay_id...
+
+    // 响应成功或失败(第二个可选参数为输出错误信息)
+    res.replyNative(prepay_id, err_msg);
 });
 
 const server = app.listen(3001, function () {
