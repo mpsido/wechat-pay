@@ -15,7 +15,7 @@ const config = {
   mchid: process.env.mchid,
   partnerKey: 'uMQKLbXzRqss0xPRtPLNdaskldoi2ehu',
   // pfx: require('fs').readFileSync('证书文件路径'),
-  // notify_url: '支付回调网址',
+  notify_url: 'localhost:3001/tenpay',
   // spbill_create_ip: 'IP地址'
 };
 
@@ -25,9 +25,9 @@ app.post('/get-qr', async (req, res) => {
     try {
         const txId = req.body.txId;
         let {prepay_id, code_url} = await api.unifiedOrder({
-            out_trade_no: txId,
-            body: 'bullshit',
-            total_fee: '0',
+            out_trade_no: txId, // 商户单号 that will appear in the bill
+            body: 'bullshit', //商品 that will appear in the bill
+            total_fee: 10, //amount to pay in cents
             // openid: '用户openid',
             trade_type: 'NATIVE',
             product_id: 'awesomeProduct'
@@ -43,7 +43,7 @@ app.post('/get-qr', async (req, res) => {
     }
 })
 
-app.post('/tenpay', (req, res) => {
+app.post('/tenpay', api.middlewareForExpress('pay'), (req, res) => {
     console.log('calling tenpay');
     tenpay.sandbox(config).then(sandboxAPI => {
         console.log('sandboxAPI', sandboxAPI);
