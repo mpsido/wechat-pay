@@ -11,12 +11,12 @@ app.get('/', function (req, res) {
 })
 
 const config = {
-  appid: process.env.appid,
-  mchid: process.env.mchid,
-  partnerKey: 'uMQKLbXzRqss0xPRtPLNdaskldoi2ehu',
-  // pfx: require('fs').readFileSync('证书文件路径'),
-  notify_url: 'localhost:3001/native-tenpay',
-  // spbill_create_ip: 'IP地址'
+    appid: process.env.appid,
+    mchid: process.env.mchid,
+    partnerKey: 'uMQKLbXzRqss0xPRtPLNdaskldoi2ehu',
+    // pfx: require('fs').readFileSync('证书文件路径'),
+    notify_url: 'localhost:3001/native-tenpay',
+    // spbill_create_ip: 'IP地址'
 };
 
 tenpay.sandbox(config, true).then(api => {
@@ -38,6 +38,23 @@ tenpay.sandbox(config, true).then(api => {
             res.send({
                 code_url,
             });
+        } catch (err) {
+            console.error(err);
+            res.status(404).send({ message: err.toString('utf-8') });
+        }
+    });
+
+    app.get('/check-paid', async (req, res) => {
+
+        try {
+            console.log('txId', req.query.txid);
+            const txId = req.query.txid;
+            let result = await api.orderQuery({
+                // transaction_id, out_trade_no 二选一
+                // transaction_id: '微信的订单号',
+                out_trade_no: txId
+            });
+            res.send(result);
         } catch (err) {
             console.error(err);
             res.status(404).send({ message: err.toString('utf-8') });
